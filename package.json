@@ -6,13 +6,15 @@
     "README.md",
     "CHANGELOG.md",
     "LICENSE",
-    "**/*.mjs"
+    "**/*.mjs",
+    "typst/*.typ"
   ],
   "author": "uwni",
   "module": "index.mjs",
   "type": "module",
   "exports": "./index.mjs",
   "license": "MIT",
+  "repository": "https://github.com/uwni/11ty-pst",
   "devDependencies": {
     "@types/bun": "latest"
   },
