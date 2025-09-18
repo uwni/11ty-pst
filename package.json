@@ -1,0 +1,26 @@
+{
+  "name": "eleventy-plugin-typst",
+  "version": "0.0.1",
+  "description": "Eleventy plugin to render Typst files",
+  "files": [
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE",
+    "**/*.mjs"
+  ],
+  "author": "uwni",
+  "module": "index.mjs",
+  "type": "module",
+  "exports": "./index.mjs",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "@myriaddreamin/typst-ts-node-compiler": "^0.6.1-rc3",
+    "@myriaddreamin/typst.ts": "^0.6.1-rc3"
+  }
+}
