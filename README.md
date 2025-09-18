@@ -2,6 +2,9 @@
 
 An Eleventy plugin that enables you to write content in [Typst](https://typst.app/) format with automatic dual HTML/PDF output generation.
 
+[![image](https://img.shields.io/badge/npm-CB3837?style=for-the-badge&logo=npm&logoColor=white)](https://www.npmjs.com/package/eleventy-plugin-typst)
+[![image](https://img.shields.io/badge/GitHub-100000?style=for-the-badge&logo=github&logoColor=white)](https://github.com/uwni/11ty-pst)
+
 ## Installation
 
 ```bash
