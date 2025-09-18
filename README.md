@@ -122,3 +122,7 @@ Your Typst files have access to these variables:
 - `buildDate`: Build timestamp
 - `commitSha`: Git commit SHA (if available)
 
+## Credits
+- 11ty: https://www.11ty.dev
+- Typst: https://typst.app
+- typst.ts: https://github.com/Myriad-Dreamin/typst.ts
