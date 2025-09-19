@@ -52,21 +52,17 @@
 
   let tags = args.named().at("tags", default: ())
 
-  assert("date" in sys.inputs, message: "date is required in inputs")
+  let date = if "date" in sys.inputs { sys.inputs.date }
 
   let metadata = (
     title: title,
     tags: tags,
-    date: sys.inputs.date,
     gen-pdf: gen-pdf,
     gen-html: gen-html,
     commitSha: commitSha,
     language: language,
+    date: date,
   )
 
-  if compilation-mode == "html" or compilation-mode == "pdf" {
-    renderer(metadata, body)
-  } else {
-    panic("Unknown target: " + target)
-  }
+  renderer(metadata, body)
 }
