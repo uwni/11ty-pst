@@ -98,6 +98,7 @@ export default function eleventyPluginTypst(eleventyConfig, options = {}) {
         if (data?.target) inputArgs.target = data.target;
         if (data?.page?.date) inputArgs.date = data.page.date.toISOString();
         if (data?.page?.inputPath) inputArgs.source = data.page.inputPath;
+        if (data?.page?.outputPath) inputArgs.source = data.page.outputPath;
         if (data?.page?.fileSlug) inputArgs.fileSlug = data.page.fileSlug;
         if (data?.metadata?.commitSha) inputArgs.commitSha = data.metadata.commitSha;
 
