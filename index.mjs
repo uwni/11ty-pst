@@ -10,6 +10,14 @@ let buildDate = JSON.stringify({
   second: date.getUTCSeconds()
 });
 
+class InputArgs {
+  eleventyData;
+
+  constructor(obj) {
+    this.eleventyData = JSON.stringify(obj);
+  }
+}
+
 async function htmlRender(compiler, inputArgs, inputPath) {
   let output = compiler.tryHtml({
     mainFilePath: inputPath,
@@ -50,11 +58,9 @@ async function getFrontmatter(compiler, inputPath) {
   try {
     let result = compiler.query({
       mainFilePath: inputPath,
-      inputs: {
-        target: "query",
-      }
+      inputs: new InputArgs({ target: "query" }),
     }, {
-      selector: "<frontmatter>"
+      selector: "<11typst:frontmatter>"
     });
     if (result?.length > 0) {
       frontmatter = result[0].value;
@@ -91,16 +97,15 @@ export default function eleventyPluginTypst(eleventyConfig, options = {}) {
   eleventyConfig.addExtension("typ", {
     compile: function (contents, inputPath) {
       return async (data) => {
+        let dataObj = {
+          metadata: data.metadata,
+          page: data.page,
+          target: data.target,
+          links: data.pagination.pageLinks,
+          outputFileExtension: data.outputFileExtension
+        };
 
-        let inputArgs = {};
-
-        if (data?.metadata?.url) inputArgs.url = data.metadata.url;
-        if (data?.target) inputArgs.target = data.target;
-        if (data?.page?.date) inputArgs.date = data.page.date.toISOString();
-        if (data?.page?.inputPath) inputArgs.source = data.page.inputPath;
-        if (data?.page?.outputPath) inputArgs.source = data.page.outputPath;
-        if (data?.page?.fileSlug) inputArgs.fileSlug = data.page.fileSlug;
-        if (data?.metadata?.commitSha) inputArgs.commitSha = data.metadata.commitSha;
+        let inputArgs = new InputArgs(dataObj);
 
         return data.target === "pdf" ? pdfRender(compiler, inputArgs, inputPath)
           : htmlRender(compiler, inputArgs, inputPath);
@@ -109,7 +114,7 @@ export default function eleventyPluginTypst(eleventyConfig, options = {}) {
     // inject data for only typst file, which may produce html
     getData: async function (inputPath) {
       let frontmatter = await getFrontmatter(compiler, inputPath);
-      // console.log(frontmatter)
+
       // Auto-configure collection data for dual HTML/PDF output
       // here pagination is abused until an official solution is supported for
       // multiple generation

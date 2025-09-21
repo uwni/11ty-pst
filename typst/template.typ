@@ -3,12 +3,24 @@
 ) = {
   [#metadata(
     args.named(),
-  )<frontmatter>]
+  )<11typst:frontmatter>]
 }
 
-#let get-compile-data(..args) = sys.inputs.at(..args)
-#let compilation-mode = get-compile-data("target", default: "pdf")
-#let commitSha = get-compile-data("commitSha", default: none)
+#let fncall(
+  code,
+) = {
+  [#metadata(
+    (code: code.text),
+  )<11typst:fncall>]
+}
+
+#let compilation-mode = "pdf"
+#let _eleventy-data = none
+#if "eleventyData" in sys.inputs {
+  _eleventy-data = json(bytes(sys.inputs.eleventyData))
+  assert("target" in _eleventy-data, message: "eleventyData must contain 'target' field")
+  compilation-mode = _eleventy-data.target
+}
 
 // you can pass a modified renderer function to the `template-base`
 // to customize rendering for different modes, note that the `compilation-mode` is exported
@@ -24,45 +36,33 @@
 }
 
 #let template-base(
+  renderer: default-renderer,
   gen-html: true,
   gen-pdf: true,
   date: none,
   title: "untitled post",
-  renderer: default-renderer,
   language: "en",
+  tags: (),
   ..args,
-  body,
 ) = {
+  let targets = ("html",) * int(gen-html) + ("pdf",) * int(gen-pdf)
+
   if compilation-mode == "query" {
     let date = if date != none {
       date
     } else {
       "git Last Modified"
     }
-    let targets = ("html",) * int(gen-html) + ("pdf",) * int(gen-pdf)
 
     return frontmatter(
       title: title,
       date: date,
       targets: targets,
+      tags: tags,
       language: language,
       ..args.named(),
     )
   }
 
-  let tags = args.named().at("tags", default: ())
-
-  let date = if "date" in sys.inputs { sys.inputs.date }
-
-  let metadata = (
-    title: title,
-    tags: tags,
-    gen-pdf: gen-pdf,
-    gen-html: gen-html,
-    commitSha: commitSha,
-    language: language,
-    date: date,
-  )
-
-  renderer(metadata, body)
+  renderer(eleventy-data: _eleventy-data)
 }
