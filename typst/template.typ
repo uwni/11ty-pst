@@ -25,11 +25,11 @@
 // you can pass a modified renderer function to the `template-base`
 // to customize rendering for different modes, note that the `compilation-mode` is exported
 // so you can use it in the custom renderer function for conditional rendering
-#let default-renderer(metadata, body) = {
+#let default-renderer(eleventy-data: none) = {
   if compilation-mode == "html" {
-    body
+    [this is for html output]
   } else if compilation-mode == "pdf" {
-    body
+    [this is for pdf output]
   } else {
     panic("Unknown renderer mode: " + compilation-mode)
   }
