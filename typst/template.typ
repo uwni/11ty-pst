@@ -9,6 +9,7 @@
 #let fncall(
   code,
 ) = {
+  panic("fncall is not implemented yet")
   [#metadata(
     (code: code.text),
   )<11typst:fncall>]
@@ -37,16 +38,13 @@
 
 #let template-base(
   renderer: default-renderer,
-  gen-html: true,
-  gen-pdf: true,
+  targets: ("html", "pdf"),
   date: none,
   title: "untitled post",
   language: "en",
   tags: (),
   ..args,
 ) = {
-  let targets = ("html",) * int(gen-html) + ("pdf",) * int(gen-pdf)
-
   if compilation-mode == "query" {
     let date = if date != none {
       date
