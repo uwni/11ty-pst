@@ -23,6 +23,8 @@
   compilation-mode = _eleventy-data.target
 }
 
+#let _environment = if "environment" in sys.inputs { sys.inputs.environment }
+
 // you can pass a modified renderer function to the `template-base`
 // to customize rendering for different modes, note that the `compilation-mode` is exported
 // so you can use it in the custom renderer function for conditional rendering
@@ -62,5 +64,5 @@
     )
   }
 
-  renderer(eleventy-data: _eleventy-data)
+  renderer(environment: _environment, eleventy-data: _eleventy-data)
 }
