@@ -12,9 +12,11 @@ let buildDate = JSON.stringify({
 
 class InputArgs {
   eleventyData;
+  environment;
 
   constructor(obj) {
     this.eleventyData = JSON.stringify(obj);
+    this.environment = process.env.NODE_ENV || null;
   }
 }
 
