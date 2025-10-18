@@ -20,7 +20,7 @@ class InputArgs {
   }
 }
 
-async function htmlRender(compiler, inputArgs, inputPath) {
+async function htmlRender(compiler, inputArgs, inputPath, outputRange) {
   let output = compiler.tryHtml({
     mainFilePath: inputPath,
     inputs: inputArgs
@@ -34,7 +34,11 @@ async function htmlRender(compiler, inputArgs, inputPath) {
     }
     return;
   }
-  return output.result.body();
+  if (outputRange === "body") {
+    return output.result.body();
+  } else if (outputRange === "all") {
+    return output.result.html();
+  }
 }
 
 async function pdfRender(compiler, inputArgs, inputPath) {
@@ -82,7 +86,8 @@ export default function eleventyPluginTypst(eleventyConfig, options = {}) {
     workspace = ".",
     targets = ["html", "pdf"],
     collection = "posts",
-    fontPath = "fonts"
+    fontPath = "fonts",
+    htmlOutputRange = "body",
   } = options;
 
   const compiler = NodeCompiler.create({
@@ -110,7 +115,7 @@ export default function eleventyPluginTypst(eleventyConfig, options = {}) {
         let inputArgs = new InputArgs(dataObj);
 
         return data.target === "pdf" ? pdfRender(compiler, inputArgs, inputPath)
-          : htmlRender(compiler, inputArgs, inputPath);
+          : htmlRender(compiler, inputArgs, inputPath, htmlOutputRange);
       }
     },
     // inject data for only typst file, which may produce html

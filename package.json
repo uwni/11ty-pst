@@ -1,6 +1,6 @@
 {
   "name": "eleventy-plugin-typst",
-  "version": "0.0.9",
+  "version": "0.1.0",
   "description": "Eleventy plugin to render Typst files",
   "files": [
     "README.md",
