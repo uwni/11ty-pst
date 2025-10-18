@@ -19,7 +19,7 @@
     "@types/bun": "latest"
   },
   "peerDependencies": {
-    "typescript": "^5"
+    "typescript": "^5.9.2"
   },
   "dependencies": {
     "@myriaddreamin/typst-ts-node-compiler": "^0.6.1-rc3",
