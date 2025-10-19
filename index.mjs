@@ -86,14 +86,14 @@ export default function eleventyPluginTypst(eleventyConfig, options = {}) {
     workspace = ".",
     targets = ["html", "pdf"],
     collection = "posts",
-    fontPath = "fonts",
+    fontPaths = ["fonts",],
     htmlOutputRange = "body",
   } = options;
 
   const compiler = NodeCompiler.create({
     workspace: workspace,
     fontArgs: [{
-      fontPaths: [fontPath],
+      fontPaths: fontPaths,
     }],
     inputs: {
       buildDate: buildDate,
