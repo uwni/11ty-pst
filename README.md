@@ -31,12 +31,83 @@ export default function(eleventyConfig) {
 
 ```javascript
 eleventyConfig.addPlugin(eleventyPluginTypst, {
-  workspace: ".",           // Typst workspace directory
-  targets: ["html", "pdf"], // Output formats
-  collection: "posts",      // Collection name for generated pages
-  fontPath: "fonts"         // Path to custom fonts
+  workspace: ".",              // Typst workspace directory
+  targets: ["html", "pdf"],    // Output formats
+  collection: "posts",         // Collection name for generated pages
+  fontPaths: ["fonts"],        // Paths to custom fonts
+  htmlOutputRange: "body",     // HTML output range: "body" or "all"
+  backend: "typst-ts-node",    // Backend type (see below)
+  typstPath: undefined,        // Path to typst executable (for CLI backends)
 });
 ```
+
+### Backend Options
+
+The plugin supports multiple backend engines for Typst compilation:
+
+#### 1. **typst-ts-node** (Default)
+
+Uses `@myriaddreamin/typst-ts-node-compiler` for fast, native compilation with full HTML support.
+
+```javascript
+eleventyConfig.addPlugin(eleventyPluginTypst, {
+  backend: "typst-ts-node"  // Default, can be omitted
+});
+```
+
+**Pros:**
+- Full HTML and PDF support
+- Fast native compilation
+- Advanced query capabilities
+- No external dependencies
+
+**Cons:**
+- Requires native Node.js bindings
+- Larger package size
+
+#### 2. **typst-cli-system**
+
+Uses your system-installed Typst CLI.
+
+```javascript
+eleventyConfig.addPlugin(eleventyPluginTypst, {
+  backend: "typst-cli-system",
+  targets: ["html", "pdf"]  // Both formats supported
+});
+```
+
+**Pros:**
+- Uses your existing Typst installation
+- Always up-to-date with latest Typst version
+- Smaller package size
+- Full HTML and PDF support (requires Typst CLI with HTML support)
+
+**Cons:**
+- Requires Typst to be installed separately (`brew install typst`, `cargo install typst-cli`, etc.)
+- Query capabilities may be limited compared to typst-ts-node
+- **Note:** HTML output requires Typst built with `--features html` (not available in all distributions)
+
+#### 3. **typst-cli-custom**
+
+Uses a custom Typst CLI at a specified path.
+
+```javascript
+eleventyConfig.addPlugin(eleventyPluginTypst, {
+  backend: "typst-cli-custom",
+  typstPath: "/path/to/custom/typst",
+  targets: ["html", "pdf"]  // Both formats supported
+});
+```
+
+**Pros:**
+- Use a specific Typst version
+- Useful for CI/CD environments
+- Control over Typst binary location
+- Full HTML and PDF support (if Typst CLI version supports it)
+
+**Cons:**
+- Same limitations as `typst-cli-system`
+- Must specify `typstPath` option
 
 ### Template Formats
 

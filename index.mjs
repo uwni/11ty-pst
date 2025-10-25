@@ -1,4 +1,4 @@
-import { NodeCompiler } from '@myriaddreamin/typst-ts-node-compiler';
+import { createTypstBackend } from './backends/factory.mjs';
 
 let date = new Date();
 let buildDate = JSON.stringify({
@@ -20,63 +20,6 @@ class InputArgs {
   }
 }
 
-async function htmlRender(compiler, inputArgs, inputPath, outputRange) {
-  let output = compiler.tryHtml({
-    mainFilePath: inputPath,
-    inputs: inputArgs
-  });
-
-  output.printDiagnostics();
-  if (!output.result) {
-    console.error("Typst compilation failed, no HTML generated.");
-    if (process.env.ELEVENTY_RUN_MOD === "build") {
-      process.exit(1);
-    }
-    return;
-  }
-  if (outputRange === "body") {
-    return output.result.body();
-  } else if (outputRange === "all") {
-    return output.result.html();
-  }
-}
-
-async function pdfRender(compiler, inputArgs, inputPath) {
-  let compileResult = compiler.compile({
-    mainFilePath: inputPath,
-    inputs: inputArgs
-  });
-
-  const result = compileResult.result;
-  if (!result) {
-    console.error("Typst compilation failed, no PDF generated.");
-    compileResult.printDiagnostics();
-    if (process.env.ELEVENTY_RUN_MOD === "build") {
-      process.exit(1);
-    }
-    return;
-  }
-  return compiler.pdf(result);
-}
-
-async function getFrontmatter(compiler, inputPath) {
-  let frontmatter = null;
-  try {
-    let result = compiler.query({
-      mainFilePath: inputPath,
-      inputs: new InputArgs({ target: "query" }),
-    }, {
-      selector: "<11typst:frontmatter>"
-    });
-    if (result?.length > 0) {
-      frontmatter = result[0].value;
-    }
-  } catch (e) {
-    console.warn("Typst frontmatter query failed:", e);
-  }
-  return frontmatter;
-}
-
 /**
  * Eleventy Plugin for Typst Integration
  * Provides dual HTML/PDF output from .typ files with automatic pagination
@@ -86,19 +29,22 @@ export default function eleventyPluginTypst(eleventyConfig, options = {}) {
     workspace = ".",
     targets = ["html", "pdf"],
     collection = "posts",
-    fontPaths = ["fonts",],
+    fontPaths = ["fonts"],
     htmlOutputRange = "body",
+    backend = "typst-ts-node",  // Backend type: "typst-ts-node", "typst-cli-system", or "typst-cli-custom"
+    typstPath,  // Path to typst executable (for CLI backends)
   } = options;
 
-  const compiler = NodeCompiler.create({
-    workspace: workspace,
-    fontArgs: [{
-      fontPaths: fontPaths,
-    }],
-    inputs: {
-      buildDate: buildDate,
-    }
+  // Create backend instance
+  const backendInstance = createTypstBackend({
+    backend,
+    typstPath,
+    workspace,
+    fontPaths,
+    buildDate,
   });
+
+  console.log(`Eleventy Typst Plugin initialized with backend: ${backendInstance.getName()}`);
 
   // Register the .typ extension
   eleventyConfig.addExtension("typ", {
@@ -114,13 +60,19 @@ export default function eleventyPluginTypst(eleventyConfig, options = {}) {
 
         let inputArgs = new InputArgs(dataObj);
 
-        return data.target === "pdf" ? pdfRender(compiler, inputArgs, inputPath)
-          : htmlRender(compiler, inputArgs, inputPath, htmlOutputRange);
+        return data.target === "pdf"
+          ? await backendInstance.compilePdf(inputPath, inputArgs)
+          : await backendInstance.compileHtml(inputPath, inputArgs, htmlOutputRange);
       }
     },
     // inject data for only typst file, which may produce html
     getData: async function (inputPath) {
-      let frontmatter = await getFrontmatter(compiler, inputPath);
+      let inputArgs = new InputArgs({ target: "query" });
+      let frontmatter = await backendInstance.queryFrontmatter(
+        inputPath,
+        inputArgs,
+        "<11typst:frontmatter>"
+      );
 
       // Auto-configure collection data for dual HTML/PDF output
       // here pagination is abused until an official solution is supported for

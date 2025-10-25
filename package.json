@@ -1,12 +1,13 @@
 {
   "name": "eleventy-plugin-typst",
-  "version": "0.1.1",
-  "description": "Eleventy plugin to render Typst files",
+  "version": "0.2.0",
+  "description": "Eleventy plugin to render Typst files with selectable backends",
   "files": [
     "README.md",
     "CHANGELOG.md",
     "LICENSE",
-    "**/*.mjs",
+    "index.mjs",
+    "backends/**/*.mjs",
     "typst/*.typ"
   ],
   "author": "uwni",
