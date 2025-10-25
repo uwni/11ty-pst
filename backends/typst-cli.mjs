@@ -1,8 +1,5 @@
-import { execFile } from 'node:child_process';
-import { promisify } from 'node:util';
+import { spawn } from 'node:child_process';
 import { TypstBackend } from './base.mjs';
-
-const execFileAsync = promisify(execFile);
 
 /**
  * Backend using Typst CLI (system or custom path)
@@ -16,37 +13,54 @@ export class TypstCliBackend extends TypstBackend {
       workspace = ".",
       fontPaths = [],
       buildDate,
+      typstArgs = [],  // Custom Typst CLI arguments
     } = options;
 
     this.typstPath = typstPath;
     this.workspace = workspace;
     this.fontPaths = fontPaths;
     this.buildDate = buildDate;
+    this.typstArgs = typstArgs;
   }
 
   /**
-   * Execute typst CLI command
+   * Execute typst CLI command with streaming support for large outputs
    */
-  async execTypst(args, options = {}) {
-    try {
-      const { stdout, stderr } = await execFileAsync(this.typstPath, args, {
-        maxBuffer: 10 * 1024 * 1024, // 10MB buffer
-        ...options
+  async execTypstStream(args) {
+    return new Promise((resolve, reject) => {
+      const child = spawn(this.typstPath, args);
+      const chunks = [];
+      const stderrChunks = [];
+
+      child.stdout.on('data', (chunk) => {
+        chunks.push(chunk);
       });
-      if (stderr) {
-        console.warn("Typst CLI warnings:", stderr);
-      }
-      return { stdout, stderr };
-    } catch (error) {
-      console.error("Typst CLI execution failed:", error.message);
-      if (error.stderr) {
-        console.error("Typst CLI error output:", error.stderr);
-      }
-      if (process.env.ELEVENTY_RUN_MOD === "build") {
-        process.exit(1);
-      }
-      throw error;
-    }
+
+      child.stderr.on('data', (chunk) => {
+        stderrChunks.push(chunk);
+      });
+
+      child.on('error', (error) => {
+        reject(error);
+      });
+
+      child.on('close', (code) => {
+        if (code !== 0) {
+          const stderr = Buffer.concat(stderrChunks).toString('utf-8');
+          console.error("Typst CLI execution failed with code:", code);
+          console.error("Typst CLI error output:", stderr);
+          if (process.env.ELEVENTY_RUN_MOD === "build") {
+            process.exit(1);
+          }
+          reject(new Error(`Typst CLI exited with code ${code}`));
+        } else {
+          resolve({
+            stdout: Buffer.concat(chunks),
+            stderr: Buffer.concat(stderrChunks)
+          });
+        }
+      });
+    });
   }
 
   /**
@@ -60,8 +74,8 @@ export class TypstCliBackend extends TypstBackend {
       args.push('--font-path', fontPath);
     }
 
-    // Set root directory
-    if (this.workspace && this.workspace !== '.') {
+    // Set root directory - always set it to ensure correct path resolution
+    if (this.workspace) {
       args.push('--root', this.workspace);
     }
 
@@ -80,31 +94,36 @@ export class TypstCliBackend extends TypstBackend {
       args.push('--input', `buildDate=${this.buildDate}`);
     }
 
+    // Add custom Typst arguments last (highest priority, can override defaults)
+    if (this.typstArgs && this.typstArgs.length > 0) {
+      args.push(...this.typstArgs);
+    }
+
     return args;
   }
 
   async compileHtml(inputPath, inputArgs, outputRange = "body") {
-    console.warn("Warning: Typst CLI HTML output requires building with --features html.");
-    console.warn("If you encounter errors, ensure your Typst installation supports HTML output.");
-
     const args = [
       'compile',
+      '--format', 'html',
+      '--features', 'html',
       ...this.buildCommonArgs(inputArgs),
       inputPath,
       '-'  // Output to stdout
     ];
 
-    const { stdout } = await this.execTypst(args);
+    const { stdout } = await this.execTypstStream(args);
+    const html = stdout.toString('utf-8');
 
     // Extract body content if requested
     if (outputRange === "body") {
-      const bodyMatch = stdout.match(/<body[^>]*>([\s\S]*)<\/body>/i);
+      const bodyMatch = html.match(/<body[^>]*>([\s\S]*)<\/body>/i);
       if (bodyMatch) {
         return bodyMatch[1];
       }
     }
 
-    return stdout;
+    return html;
   }
 
   async compilePdf(inputPath, inputArgs) {
@@ -115,31 +134,26 @@ export class TypstCliBackend extends TypstBackend {
       '-'  // Output to stdout
     ];
 
-    const { stdout } = await this.execTypst(args, {
-      encoding: null,  // Return Buffer instead of string
-      maxBuffer: 50 * 1024 * 1024  // 50MB for large PDFs
-    });
-
+    // Use streaming for PDFs to avoid buffer size limits
+    const { stdout } = await this.execTypstStream(args);
     return stdout;
   }
 
   async queryFrontmatter(inputPath, inputArgs, selector) {
-    console.warn("Warning: Frontmatter query is limited with Typst CLI backend.");
-    console.warn("Advanced queries may not work as expected.");
-
     try {
       const args = [
         'query',
+        '--features', 'html',
         ...this.buildCommonArgs(inputArgs),
         inputPath,
         selector
       ];
 
-      const { stdout } = await this.execTypst(args);
+      const { stdout } = await this.execTypstStream(args);
 
       if (stdout) {
         try {
-          const result = JSON.parse(stdout);
+          const result = JSON.parse(stdout.toString('utf-8'));
           if (Array.isArray(result) && result.length > 0) {
             return result[0].value || result[0];
           }

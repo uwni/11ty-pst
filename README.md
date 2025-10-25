@@ -38,6 +38,7 @@ eleventyConfig.addPlugin(eleventyPluginTypst, {
   htmlOutputRange: "body",     // HTML output range: "body" or "all"
   backend: "typst-ts-node",    // Backend type (see below)
   typstPath: undefined,        // Path to typst executable (for CLI backends)
+  typstArgs: [],               // Custom Typst CLI arguments (CLI backends only)
 });
 ```
 
@@ -108,6 +109,24 @@ eleventyConfig.addPlugin(eleventyPluginTypst, {
 **Cons:**
 - Same limitations as `typst-cli-system`
 - Must specify `typstPath` option
+
+### Custom Typst CLI Arguments
+
+For CLI backends (`typst-cli-system` and `typst-cli-custom`), you can pass custom arguments to the Typst compiler using the `typstArgs` option:
+
+```javascript
+eleventyConfig.addPlugin(eleventyPluginTypst, {
+  backend: "typst-cli-system",
+  workspace: ".",
+  fontPaths: ["fonts"],
+  typstArgs: [
+    "--ppi", "300",           // Set custom PPI for rasterization
+    "--jobs", "4",            // Limit parallel compilation jobs
+  ]
+});
+```
+
+**Note:** Custom arguments are added with highest priority and can override default arguments. The `typstArgs` option is **not supported** by the `typst-ts-node` backend and will throw an error if used.
 
 ### Template Formats
 

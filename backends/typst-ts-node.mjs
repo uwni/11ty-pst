@@ -12,7 +12,16 @@ export class TypstTsNodeBackend extends TypstBackend {
       workspace = ".",
       fontPaths = ["fonts"],
       buildDate,
+      typstArgs,  // Not supported by this backend
     } = options;
+
+    // Validate that unsupported options are not provided
+    if (typstArgs && typstArgs.length > 0) {
+      throw new Error(
+        'typstArgs is not supported by typst-ts-node backend. ' +
+        'Custom Typst CLI arguments are only available with typst-cli-system or typst-cli-custom backends.'
+      );
+    }
 
     this.compiler = NodeCompiler.create({
       workspace: workspace,
