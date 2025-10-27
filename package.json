@@ -24,6 +24,6 @@
   },
   "dependencies": {
     "@myriaddreamin/typst-ts-node-compiler": "^0.6.1-rc3",
-    "@myriaddreamin/typst.ts": "^0.6.1-rc3"
+    "@myriaddreamin/typst.ts": "^0.6.1-rc4"
   }
 }
