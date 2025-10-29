@@ -1,6 +1,6 @@
 {
   "name": "eleventy-plugin-typst",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "Eleventy plugin to render Typst files with selectable backends",
   "files": [
     "README.md",
@@ -23,7 +23,6 @@
     "typescript": "^5.9.2"
   },
   "dependencies": {
-    "@myriaddreamin/typst-ts-node-compiler": "^0.6.1-rc3",
-    "@myriaddreamin/typst.ts": "^0.7.0-rc1"
+    "@myriaddreamin/typst-ts-node-compiler": "^0.6.1-rc3"
   }
 }

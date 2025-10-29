@@ -1,4 +1,7 @@
 import { spawn } from 'node:child_process';
+import { mkdtemp, readFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
 import { TypstBackend } from './base.mjs';
 
 /**
@@ -17,7 +20,7 @@ export class TypstCliBackend extends TypstBackend {
     } = options;
 
     this.typstPath = typstPath;
-    this.workspace = workspace;
+    this.workspace = path.resolve(workspace); // Convert to absolute path
     this.fontPaths = fontPaths;
     this.buildDate = buildDate;
     this.typstArgs = typstArgs;
@@ -25,8 +28,9 @@ export class TypstCliBackend extends TypstBackend {
 
   /**
    * Execute typst CLI command with streaming support for large outputs
+   * If depsPath is provided, reads and returns dependencies after compilation
    */
-  async execTypstStream(args) {
+  async execTypstStream(args, depsPath = null) {
     return new Promise((resolve, reject) => {
       const child = spawn(this.typstPath, args);
       const chunks = [];
@@ -44,7 +48,7 @@ export class TypstCliBackend extends TypstBackend {
         reject(error);
       });
 
-      child.on('close', (code) => {
+      child.on('close', async (code) => {
         if (code !== 0) {
           const stderr = Buffer.concat(stderrChunks).toString('utf-8');
           console.error("Typst CLI execution failed with code:", code);
@@ -54,10 +58,29 @@ export class TypstCliBackend extends TypstBackend {
           }
           reject(new Error(`Typst CLI exited with code ${code}`));
         } else {
-          resolve({
+          const result = {
             stdout: Buffer.concat(chunks),
-            stderr: Buffer.concat(stderrChunks)
-          });
+            stderr: Buffer.concat(stderrChunks),
+            dependencies: null
+          };
+
+          // Read dependencies if path provided
+          if (depsPath) {
+            try {
+              const depsContent = await readFile(depsPath, 'utf-8');
+              const depsJson = JSON.parse(depsContent);
+              // Typst --deps outputs {inputs: [...]} format
+              const absoluteDeps = depsJson.inputs ? depsJson.inputs.map(dep => {
+                return path.resolve(this.workspace, dep);
+              }) : null;
+              result.dependencies = absoluteDeps;
+            } catch (error) {
+              console.warn("Failed to read dependencies:", error);
+              result.dependencies = [];
+            }
+          }
+
+          resolve(result);
         }
       });
     });
@@ -65,8 +88,9 @@ export class TypstCliBackend extends TypstBackend {
 
   /**
    * Build common CLI arguments including input parameters
+   * If depsPath is provided, adds --deps argument
    */
-  buildCommonArgs(inputArgs = null) {
+  buildCommonArgs(inputArgs = null, depsPath = null) {
     const args = [];
 
     // Add font paths
@@ -94,6 +118,11 @@ export class TypstCliBackend extends TypstBackend {
       args.push('--input', `buildDate=${this.buildDate}`);
     }
 
+    // Add dependencies output path if specified (defaults to JSON format)
+    if (depsPath) {
+      args.push('--deps', depsPath);
+    }
+
     // Add custom Typst arguments last (highest priority, can override defaults)
     if (this.typstArgs && this.typstArgs.length > 0) {
       args.push(...this.typstArgs);
@@ -102,41 +131,53 @@ export class TypstCliBackend extends TypstBackend {
     return args;
   }
 
+  async depsPath() {
+    const tempDir = await mkdtemp(path.join(tmpdir(), 'typst-deps-'));
+    return path.join(tempDir, 'deps.json');
+  }
+
+
   async compileHtml(inputPath, inputArgs, outputRange = "body") {
+    const depsPath = await this.depsPath();
     const args = [
       'compile',
       '--format', 'html',
       '--features', 'html',
-      ...this.buildCommonArgs(inputArgs),
+      ...this.buildCommonArgs(inputArgs, depsPath),
       inputPath,
       '-'  // Output to stdout
     ];
 
-    const { stdout } = await this.execTypstStream(args);
+    const { stdout, dependencies } = await this.execTypstStream(args, depsPath);
+
     const html = stdout.toString('utf-8');
 
     // Extract body content if requested
+    let result;
     if (outputRange === "body") {
       const bodyMatch = html.match(/<body[^>]*>([\s\S]*)<\/body>/i);
-      if (bodyMatch) {
-        return bodyMatch[1];
-      }
+      result = bodyMatch ? bodyMatch[1] : html;
+    } else {
+      result = html;
     }
 
-    return html;
+    return { content: result, dependencies: dependencies };
   }
 
   async compilePdf(inputPath, inputArgs) {
+    const depsPath = await this.depsPath();
+
     const args = [
       'compile',
-      ...this.buildCommonArgs(inputArgs),
+      ...this.buildCommonArgs(inputArgs, depsPath),
       inputPath,
       '-'  // Output to stdout
     ];
 
     // Use streaming for PDFs to avoid buffer size limits
-    const { stdout } = await this.execTypstStream(args);
-    return stdout;
+    const { stdout, dependencies } = await this.execTypstStream(args, depsPath);
+
+    return { content: stdout, dependencies: dependencies };
   }
 
   async queryFrontmatter(inputPath, inputArgs, selector) {

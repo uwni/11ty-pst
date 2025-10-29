@@ -1,3 +1,25 @@
+# 0.3.0
+
+## New Features
+
+### Automatic Dependency Tracking
+- **Added automatic dependency tracking for CLI backends** (`typst-cli-system` and `typst-cli-custom`)
+  - Automatically registers file dependencies with Eleventy using `--deps` flag
+  - Watch mode now correctly recompiles when imported modules, images, or other dependencies change
+  - Works transparently with no configuration needed
+  - Dependencies are tracked per compilation and cleaned up automatically
+
+### Implementation Details
+- Modified `TypstCliBackend` to use temporary directories for dependency output
+- Updated return signatures to include both content and dependencies
+- Integrated with Eleventy's `addDependencies` API for proper watch mode support
+
+### Limitations
+- Dependency tracking is currently only available with CLI backends
+- `typst-ts-node` backend does not support dependency tracking yet
+- **Incremental mode** (`--watch --incremental`) is incompatible with dependency tracking in Eleventy 3.x
+- Compilation cache is disabled (`cache: false`) to ensure dependencies trigger recompilation
+
 # 0.2.0
 
 ## Major Features

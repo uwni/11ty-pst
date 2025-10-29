@@ -128,6 +128,27 @@ eleventyConfig.addPlugin(eleventyPluginTypst, {
 
 **Note:** Custom arguments are added with highest priority and can override default arguments. The `typstArgs` option is **not supported** by the `typst-ts-node` backend and will throw an error if used.
 
+### Automatic Dependency Tracking
+
+For CLI backends (`typst-cli-system` and `typst-cli-custom`), the plugin automatically tracks file dependencies during compilation. When you import Typst modules, reference images, or use other external files, Eleventy will automatically watch these files and recompile when they change.
+
+This feature works automatically in watch mode with no configuration needed. The plugin uses Typst's `--deps` flag internally to capture all file dependencies.
+
+**Example:**
+```typst
+// main.typ
+#import "utils/helpers.typ": format-date
+#image("assets/diagram.png")
+
+// When helpers.typ or diagram.png changes, main.typ will automatically recompile
+```
+
+**Important Notes:**
+- Automatic dependency tracking is currently only available with CLI backends
+- The `typst-ts-node` backend does not support this feature yet
+- **Do not use** `--incremental` mode (`eleventy --watch --incremental`) as it disables dependency tracking in Eleventy 3.x
+- Use `eleventy --watch` or `eleventy --serve` instead
+
 ### Template Formats
 
 Add `"typ"` to your template formats in your Eleventy config:

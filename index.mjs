@@ -48,7 +48,7 @@ export default function eleventyPluginTypst(eleventyConfig, options = {}) {
 
   // Register the .typ extension
   eleventyConfig.addExtension("typ", {
-    compile: function (contents, inputPath) {
+    compile: function (_contents, inputPath) {
       return async (data) => {
         let dataObj = {
           metadata: data.metadata,
@@ -60,9 +60,17 @@ export default function eleventyPluginTypst(eleventyConfig, options = {}) {
 
         let inputArgs = new InputArgs(dataObj);
 
-        return data.target === "pdf"
+        const result = data.target === "pdf"
           ? await backendInstance.compilePdf(inputPath, inputArgs)
           : await backendInstance.compileHtml(inputPath, inputArgs, htmlOutputRange);
+
+        const deps = result.dependencies;
+        if (deps && Array.isArray(deps)) {
+          this.addDependencies(inputPath, deps);
+          console.debug(`Typst dependencies for ${inputPath}:`, deps);
+        }
+
+        return result.content;
       }
     },
     // inject data for only typst file, which may produce html

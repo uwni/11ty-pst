@@ -23,6 +23,7 @@ export class TypstTsNodeBackend extends TypstBackend {
       );
     }
 
+
     this.compiler = NodeCompiler.create({
       workspace: workspace,
       fontArgs: [{
@@ -46,14 +47,13 @@ export class TypstTsNodeBackend extends TypstBackend {
       if (process.env.ELEVENTY_RUN_MOD === "build") {
         process.exit(1);
       }
-      return;
+      return { content: undefined, dependencies: null };
     }
 
-    if (outputRange === "body") {
-      return output.result.body();
-    } else if (outputRange === "all") {
-      return output.result.html();
-    }
+    const content = outputRange === "body" ? output.result.body() : output.result.html();
+
+    // typst-ts-node doesn't support dependency tracking yet
+    return { content, dependencies: null };
   }
 
   async compilePdf(inputPath, inputArgs) {
@@ -69,9 +69,13 @@ export class TypstTsNodeBackend extends TypstBackend {
       if (process.env.ELEVENTY_RUN_MOD === "build") {
         process.exit(1);
       }
-      return;
+      return { content: undefined, dependencies: null };
     }
-    return this.compiler.pdf(result);
+
+    const content = this.compiler.pdf(result);
+
+    // typst-ts-node doesn't support dependency tracking yet
+    return { content, dependencies: null };
   }
 
   async queryFrontmatter(inputPath, inputArgs, selector) {

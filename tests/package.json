@@ -1,0 +1,18 @@
+{
+  "name": "11ty-pst-test",
+  "version": "1.0.0",
+  "description": "Test project for eleventy-plugin-typst dependency tracking",
+  "type": "module",
+  "scripts": {
+    "build": "eleventy",
+    "start": "eleventy --serve",
+    "test": "bun run build",
+    "test:watch": "eleventy --watch"
+  },
+  "keywords": ["eleventy", "typst", "test"],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@11ty/eleventy": "^3.1.2"
+  }
+}
