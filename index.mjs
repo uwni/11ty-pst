@@ -32,6 +32,7 @@ export default function eleventyPluginTypst(eleventyConfig, options = {}) {
     fontPaths = ["fonts"],
     htmlOutputRange = "body",
     backend = "typst-ts-node",  // Backend type: "typst-ts-node", "typst-cli-system", or "typst-cli-custom"
+    pdfOptions = null,
     typstPath,  // Path to typst executable (for CLI backends)
   } = options;
 
@@ -42,6 +43,7 @@ export default function eleventyPluginTypst(eleventyConfig, options = {}) {
     workspace,
     fontPaths,
     buildDate,
+    pdfOptions
   });
 
   console.log(`Eleventy Typst Plugin initialized with backend: ${backendInstance.getName()}`);

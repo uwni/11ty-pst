@@ -13,6 +13,7 @@ export class TypstTsNodeBackend extends TypstBackend {
       fontPaths = ["fonts"],
       buildDate,
       typstArgs,  // Not supported by this backend
+      pdfOptions,
     } = options;
 
     // Validate that unsupported options are not provided
@@ -22,7 +23,6 @@ export class TypstTsNodeBackend extends TypstBackend {
         'Custom Typst CLI arguments are only available with typst-cli-system or typst-cli-custom backends.'
       );
     }
-
 
     this.compiler = NodeCompiler.create({
       workspace: workspace,
@@ -72,7 +72,7 @@ export class TypstTsNodeBackend extends TypstBackend {
       return { content: undefined, dependencies: null };
     }
 
-    const content = this.compiler.pdf(result);
+    const content = this.compiler.pdf(result, this.options.pdfOptions);
 
     // typst-ts-node doesn't support dependency tracking yet
     return { content, dependencies: null };

@@ -19,12 +19,14 @@ export function createTypstBackend(options = {}) {
     workspace = ".",
     fontPaths = ["fonts"],
     buildDate,
+    pdfOptions,
   } = options;
 
   const backendOptions = {
     workspace,
     fontPaths,
     buildDate,
+    pdfOptions,
   };
 
   switch (backend) {

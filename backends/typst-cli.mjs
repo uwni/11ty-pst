@@ -17,6 +17,7 @@ export class TypstCliBackend extends TypstBackend {
       fontPaths = [],
       buildDate,
       typstArgs = [],  // Custom Typst CLI arguments
+      pdfOptions = {},
     } = options;
 
     this.typstPath = typstPath;
@@ -24,6 +25,7 @@ export class TypstCliBackend extends TypstBackend {
     this.fontPaths = fontPaths;
     this.buildDate = buildDate;
     this.typstArgs = typstArgs;
+    this.pdfOptions = pdfOptions;
   }
 
   /**
@@ -92,6 +94,7 @@ export class TypstCliBackend extends TypstBackend {
    */
   buildCommonArgs(inputArgs = null, depsPath = null) {
     const args = [];
+    let pdfOpts = this.pdfOptions;
 
     // Add font paths
     for (const fontPath of this.fontPaths) {
@@ -111,6 +114,14 @@ export class TypstCliBackend extends TypstBackend {
       if (inputArgs.environment) {
         args.push('--input', `environment=${inputArgs.environment}`);
       }
+
+      if (inputArgs.pdfOptions) {
+        pdfOpts = inputArgs.pdfOptions;
+      }
+    }
+
+    if (pdfOpts?.pdfStandard) {
+      args.push('--pdf-standard', pdfOpts.pdfStandard);
     }
 
     // Add build date if available
@@ -164,7 +175,7 @@ export class TypstCliBackend extends TypstBackend {
     return { content: result, dependencies: dependencies };
   }
 
-  async compilePdf(inputPath, inputArgs) {
+  async compilePdf(inputPath, inputArgs, pdfOpts = null) {
     const depsPath = await this.depsPath();
 
     const args = [
