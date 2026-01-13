@@ -43,7 +43,7 @@ export class TypstTsNodeBackend extends TypstBackend {
 
     output.printDiagnostics();
     if (!output.result) {
-      console.error("Typst compilation failed, no HTML generated.");
+      console.error("Typst compilation failed, no HTML generated for", inputPath);
       if (process.env.ELEVENTY_RUN_MOD === "build") {
         process.exit(1);
       }
@@ -64,7 +64,7 @@ export class TypstTsNodeBackend extends TypstBackend {
 
     const result = compileResult.result;
     if (!result) {
-      console.error("Typst compilation failed, no PDF generated.");
+      console.error("Typst compilation failed, no PDF generated for ", inputPath);
       compileResult.printDiagnostics();
       if (process.env.ELEVENTY_RUN_MOD === "build") {
         process.exit(1);
