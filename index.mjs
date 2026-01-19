@@ -59,7 +59,6 @@ export default function eleventyPluginTypst(eleventyConfig, options = {}) {
           links: data.pagination.pageLinks,
           outputFileExtension: data.outputFileExtension
         };
-
         let inputArgs = new InputArgs(dataObj);
 
         const result = data.target === "pdf"
