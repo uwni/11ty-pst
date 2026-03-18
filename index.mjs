@@ -87,6 +87,7 @@ export default function eleventyPluginTypst(eleventyConfig, options = {}) {
       // here pagination is abused until an official solution is supported for
       // multiple generation
       // see: https://github.com/11ty/eleventy/issues/2205
+      const customPermalink = frontmatter?.permalink;
       return {
         targets: targets,
         // the targets from <frontmatter> should override the defaults
@@ -99,7 +100,7 @@ export default function eleventyPluginTypst(eleventyConfig, options = {}) {
         permalink: function (data) {
           switch (data.target) {
             case "pdf":
-              return `archives/${data.page.fileSlug}.pdf`;
+              return customPermalink || `archives/${data.page.fileSlug}.pdf`;
             case "html":
               return;
           }
