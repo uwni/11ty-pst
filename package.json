@@ -15,7 +15,11 @@
   "type": "module",
   "exports": "./index.mjs",
   "license": "MIT",
+  "homepage": "https://github.com/uwni/11ty-pst#readme",
   "repository": "https://github.com/uwni/11ty-pst",
+  "bugs": {
+    "url": "https://github.com/uwni/11ty-pst/issues"
+  },
   "devDependencies": {
     "@types/bun": "latest"
   },
